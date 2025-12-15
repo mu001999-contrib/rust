@@ -685,7 +685,7 @@ pub enum BuiltinLintDiag {
     },
     UnusedQualifications {
         /// The span of the unnecessarily-qualified path to remove.
-        removal_span: Span,
+        removal_span: Option<Span>,
     },
     AssociatedConstElidedLifetime {
         elided: bool,

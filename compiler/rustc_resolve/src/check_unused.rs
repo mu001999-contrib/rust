@@ -553,7 +553,13 @@ impl Resolver<'_, '_> {
                 UNUSED_QUALIFICATIONS,
                 unn_qua.node_id,
                 unn_qua.path_span,
-                BuiltinLintDiag::UnusedQualifications { removal_span: unn_qua.removal_span },
+                BuiltinLintDiag::UnusedQualifications {
+                    removal_span: if unn_qua.removal_span.is_empty() {
+                        None
+                    } else {
+                        Some(unn_qua.removal_span)
+                    },
+                },
             );
         }
 
