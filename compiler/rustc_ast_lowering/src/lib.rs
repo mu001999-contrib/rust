@@ -2396,6 +2396,28 @@ impl<'a, 'hir> LoweringContext<'a, 'hir> {
         };
 
         match &expr.kind {
+            ExprKind::Call(callee, args) => {
+                let callee = self.arena.alloc(self.lower_expr_to_const_arg_direct(callee));
+
+                let args = self.arena.alloc_from_iter(args.iter().map(|arg| {
+                    let expr = if let ExprKind::ConstBlock(anon_const) = &arg.kind {
+                        let def_id = self.local_def_id(anon_const.id);
+                        let def_kind = self.tcx.def_kind(def_id);
+                        assert_eq!(DefKind::AnonConst, def_kind);
+
+                        self.lower_anon_const_to_const_arg_direct(anon_const)
+                    } else {
+                        self.lower_expr_to_const_arg_direct(&arg)
+                    };
+
+                    &*self.arena.alloc(expr)
+                }));
+
+                ConstArg {
+                    hir_id: self.next_id(),
+                    kind: hir::ConstArgKind::Call(expr.span, callee, args),
+                }
+            }
             ExprKind::Path(qself, path) => {
                 let qpath = self.lower_qpath(
                     expr.id,

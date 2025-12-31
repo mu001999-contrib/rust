@@ -2246,6 +2246,9 @@ impl<'tcx> dyn HirTyLowerer<'tcx> + '_ {
 
         let hir_id = const_arg.hir_id;
         match const_arg.kind {
+            hir::ConstArgKind::Call(span, callee, args) => {
+                self.lower_const_arg_call(callee, args, span)
+            }
             hir::ConstArgKind::Path(hir::QPath::Resolved(maybe_qself, path)) => {
                 debug!(?maybe_qself, ?path);
                 let opt_self_ty = maybe_qself.as_ref().map(|qself| self.lower_ty(qself));
@@ -2269,6 +2272,79 @@ impl<'tcx> dyn HirTyLowerer<'tcx> + '_ {
             hir::ConstArgKind::Anon(anon) => self.lower_const_arg_anon(anon),
             hir::ConstArgKind::Infer(span, ()) => self.ct_infer(None, span),
             hir::ConstArgKind::Error(_, e) => ty::Const::new_error(tcx, e),
+        }
+    }
+
+    fn lower_const_arg_call(
+        &self,
+        callee: &hir::ConstArg<'tcx>,
+        args: &'tcx [&'tcx hir::ConstArg<'tcx>],
+        span: Span,
+    ) -> Const<'tcx> {
+        let tcx = self.tcx();
+
+        let kind = &callee.kind;
+        match callee.kind {
+            // Currently only tuple constructors are supported as const calls.
+            hir::ConstArgKind::Path(hir::QPath::Resolved(
+                maybe_qself,
+                path @ hir::Path { res: Res::Def(DefKind::Ctor(_, CtorKind::Fn), did), .. },
+            )) => {
+                debug!(?maybe_qself, ?path);
+                let opt_self_ty = maybe_qself.as_ref().map(|qself| self.lower_ty(qself));
+                // FIXME: fix `lower_resolved_ty_path` if this not work
+                let ty = self.lower_resolved_ty_path(
+                    opt_self_ty,
+                    path,
+                    callee.hir_id,
+                    PermitVariants::Yes,
+                );
+                let variant_did = tcx.parent(*did);
+
+                let ty::Adt(adt_def, adt_args) = ty.kind() else { unreachable!() };
+
+                let variant_def = adt_def.variant_with_id(variant_did);
+                let variant_idx = adt_def.variant_index_with_id(variant_did).as_u32();
+
+                if variant_def.fields.len() != args.len() {
+                    let e = tcx.dcx().span_err(
+                        span,
+                        format!(
+                            "expected {} arguments, found {}",
+                            variant_def.fields.len(),
+                            args.len()
+                        ),
+                    );
+                    return ty::Const::new_error(tcx, e);
+                }
+
+                let fields = variant_def
+                    .fields
+                    .iter()
+                    .zip(args.iter())
+                    .map(|(field_def, expr)| {
+                        // FIXME(mgca): we aren't really handling privacy or stability but we should.
+                        self.lower_const_arg(expr, FeedConstTy::Param(field_def.did, adt_args))
+                    })
+                    .collect::<Vec<_>>();
+
+                let opt_discr_const = if adt_def.is_enum() {
+                    let valtree = ty::ValTree::from_scalar_int(tcx, variant_idx.into());
+                    Some(ty::Const::new_value(tcx, valtree, tcx.types.u32))
+                } else {
+                    None
+                };
+
+                let valtree =
+                    ty::ValTree::from_branches(tcx, opt_discr_const.into_iter().chain(fields));
+                ty::Const::new_value(tcx, valtree, ty)
+            }
+            hir::ConstArgKind::Error(_, e) => ty::Const::new_error(tcx, e),
+            _ => Const::new_error_with_message(
+                tcx,
+                span,
+                format!("invalid Kind {kind:?} for const call"),
+            ),
         }
     }
 

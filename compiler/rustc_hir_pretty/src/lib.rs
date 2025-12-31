@@ -1137,6 +1137,17 @@ impl<'a> State<'a> {
 
     fn print_const_arg(&mut self, const_arg: &hir::ConstArg<'_>) {
         match &const_arg.kind {
+            ConstArgKind::Call(_, callee, args) => {
+                self.print_const_arg(callee);
+                self.popen();
+                self.commasep_cmnt(
+                    Inconsistent,
+                    args,
+                    |s, arg| s.print_const_arg(arg),
+                    |arg| arg.span(),
+                );
+                self.pclose();
+            }
             // FIXME(mgca): proper printing for struct exprs
             ConstArgKind::Struct(..) => self.word("/* STRUCT EXPR */"),
             ConstArgKind::Path(qpath) => self.print_qpath(qpath, true),
