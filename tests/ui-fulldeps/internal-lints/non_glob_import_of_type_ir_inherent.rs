@@ -1,6 +1,7 @@
 //@ compile-flags: -Z unstable-options
 #![feature(rustc_private)]
 #![deny(rustc::non_glob_import_of_type_ir_inherent)]
+#![allow(redundant_self)]
 
 extern crate rustc_type_ir;
 

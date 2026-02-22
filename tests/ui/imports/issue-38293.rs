@@ -1,6 +1,8 @@
 //@ edition:2015
 // Test that `fn foo::bar::{self}` only imports `bar` in the type namespace.
 
+#![allow(redundant_self)]
+
 mod foo {
     pub fn f() { }
 }

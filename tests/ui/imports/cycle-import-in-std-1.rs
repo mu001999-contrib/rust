@@ -2,6 +2,8 @@
 
 // https://github.com/rust-lang/rust/issues/124490
 
+#![allow(redundant_self)]
+
 use ops::{self as std};
 //~^ ERROR: unresolved import `ops`
 use std::collections::{self as ops};

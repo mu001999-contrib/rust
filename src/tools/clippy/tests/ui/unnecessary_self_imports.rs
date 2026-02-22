@@ -1,5 +1,5 @@
 #![warn(clippy::unnecessary_self_imports)]
-#![allow(unused_imports, dead_code)]
+#![allow(unused_imports, dead_code, redundant_self)]
 
 use std::collections::hash_map::{self, *};
 use std::fs::{self as alias};

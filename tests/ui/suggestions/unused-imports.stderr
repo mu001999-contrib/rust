@@ -1,5 +1,5 @@
 warning: unused imports: `A` and `C`
-  --> $DIR/unused-imports.rs:22:14
+  --> $DIR/unused-imports.rs:23:14
    |
 LL | use nested::{A, B, C};
    |              ^     ^
@@ -11,7 +11,7 @@ LL | #![warn(unused_imports)]
    |         ^^^^^^^^^^^^^^
 
 warning: unused imports: `D`, `E`, and `G`
-  --> $DIR/unused-imports.rs:26:5
+  --> $DIR/unused-imports.rs:27:5
    |
 LL |     D,
    |     ^
@@ -23,7 +23,7 @@ LL |         G,
    |         ^
 
 warning: unused import: `I`
-  --> $DIR/unused-imports.rs:37:29
+  --> $DIR/unused-imports.rs:38:29
    |
 LL | use nested::another::{self, I};
    |                             ^

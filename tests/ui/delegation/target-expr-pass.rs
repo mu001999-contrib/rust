@@ -2,6 +2,7 @@
 
 #![feature(fn_delegation)]
 #![allow(incomplete_features)]
+#![allow(redundant_self)]
 
 mod to_reuse {
     pub fn foo(x: i32) -> i32 { x }

@@ -1,5 +1,5 @@
 error: unused import: `*`
-  --> $DIR/lint-unnecessary-qualification-issue-121331.rs:9:28
+  --> $DIR/lint-unnecessary-qualification-issue-121331.rs:10:28
    |
 LL |     CoroutineState::{self, *},
    |                            ^
@@ -11,7 +11,7 @@ LL | #![deny(unused_imports)]
    |         ^^^^^^^^^^^^^^
 
 error: unnecessary qualification
-  --> $DIR/lint-unnecessary-qualification-issue-121331.rs:37:5
+  --> $DIR/lint-unnecessary-qualification-issue-121331.rs:38:5
    |
 LL |     foo::bar();
    |     ^^^^^^^^

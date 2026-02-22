@@ -5,6 +5,7 @@
 //@ edition: 2018
 #![feature(async_drop)]
 #![allow(incomplete_features)]
+#![allow(redundant_self)]
 
 use core::future::{async_drop_in_place, Future};
 use core::mem::{self};

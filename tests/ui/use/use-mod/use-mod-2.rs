@@ -1,3 +1,5 @@
+#![allow(redundant_self)]
+
 mod foo {
     use self::{self};
     //~^ ERROR imports need to be explicitly named

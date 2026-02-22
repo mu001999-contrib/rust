@@ -1,6 +1,8 @@
 //@ run-pass
 //@ edition:2018
 
+#![allow(redundant_self)]
+
 use std;
 use std::io;
 

@@ -1,5 +1,7 @@
 //@ run-pass
 #![allow(unused_variables)]
+#![allow(redundant_self)]
+
 use foo::{x, y as fooy};
 use Maybe::{Yes as MaybeYes};
 

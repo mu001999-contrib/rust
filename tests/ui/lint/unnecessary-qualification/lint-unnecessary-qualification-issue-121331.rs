@@ -3,6 +3,7 @@
 #![deny(unused_qualifications)]
 #![deny(unused_imports)]
 #![feature(coroutines, coroutine_trait)]
+#![allow(redundant_self)]
 
 use std::ops::{
     Coroutine,

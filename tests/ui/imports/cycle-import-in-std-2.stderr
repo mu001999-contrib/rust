@@ -1,5 +1,5 @@
 error[E0432]: unresolved import `ops`
-  --> $DIR/cycle-import-in-std-2.rs:5:11
+  --> $DIR/cycle-import-in-std-2.rs:7:11
    |
 LL | use ops::{self as std};
    |           ^^^^^^^^^^^ no external crate `ops`

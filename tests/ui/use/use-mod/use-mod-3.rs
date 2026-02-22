@@ -1,3 +1,5 @@
+#![allow(redundant_self)]
+
 use foo::bar::{ //~ ERROR module `bar` is private
     self
 };

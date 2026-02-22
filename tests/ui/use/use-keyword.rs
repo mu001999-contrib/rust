@@ -1,5 +1,6 @@
 //@ check-pass
 
+#![allow(redundant_self)]
 mod a {
     mod b {
         use self as A;

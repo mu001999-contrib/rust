@@ -1,6 +1,7 @@
 //@ run-pass
 
 #![allow(unused_imports)]
+#![allow(redundant_self)]
 
 pub use foo::bar::{self, First};
 use self::bar::Second;

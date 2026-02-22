@@ -1,5 +1,5 @@
 error: braces around A is unnecessary
-  --> $DIR/lint-unnecessary-import-braces.rs:3:1
+  --> $DIR/lint-unnecessary-import-braces.rs:4:1
    |
 LL | use crate::test::{A};
    | ^^^^^^^^^^^^^^^^^^^^^

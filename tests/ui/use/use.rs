@@ -1,6 +1,7 @@
 //@ run-pass
 
 #![allow(unused_imports)]
+#![allow(redundant_self)]
 #![feature(no_core)]
 #![no_core]
 

@@ -1,5 +1,5 @@
 error: imports need to be explicitly named
-  --> $DIR/use-mod-2.rs:2:16
+  --> $DIR/use-mod-2.rs:4:16
    |
 LL |     use self::{self};
    |                ^^^^
@@ -10,7 +10,7 @@ LL |     use self::{self as name};
    |                     +++++++
 
 error: imports need to be explicitly named
-  --> $DIR/use-mod-2.rs:5:17
+  --> $DIR/use-mod-2.rs:7:17
    |
 LL |     use super::{self};
    |                 ^^^^

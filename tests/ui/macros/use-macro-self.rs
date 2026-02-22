@@ -1,5 +1,6 @@
 //@ run-pass
 #![allow(unused_imports)]
+#![allow(redundant_self)]
 //@ aux-build:use-macro-self.rs
 
 #[macro_use]

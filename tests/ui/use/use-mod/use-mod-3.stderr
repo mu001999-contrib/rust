@@ -1,23 +1,23 @@
 error[E0603]: module `bar` is private
-  --> $DIR/use-mod-3.rs:1:10
+  --> $DIR/use-mod-3.rs:3:10
    |
 LL | use foo::bar::{
    |          ^^^ private module
    |
 note: the module `bar` is defined here
-  --> $DIR/use-mod-3.rs:9:5
+  --> $DIR/use-mod-3.rs:11:5
    |
 LL |     mod bar { pub type Bar = isize; }
    |     ^^^^^^^
 
 error[E0603]: module `bar` is private
-  --> $DIR/use-mod-3.rs:4:10
+  --> $DIR/use-mod-3.rs:6:10
    |
 LL | use foo::bar::{
    |          ^^^ private module
    |
 note: the module `bar` is defined here
-  --> $DIR/use-mod-3.rs:9:5
+  --> $DIR/use-mod-3.rs:11:5
    |
 LL |     mod bar { pub type Bar = isize; }
    |     ^^^^^^^

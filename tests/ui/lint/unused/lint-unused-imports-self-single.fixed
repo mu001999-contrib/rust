@@ -2,6 +2,7 @@
 
 #![deny(unused_imports)]
 #![allow(unreachable_code)]
+#![allow(redundant_self)]
 
 use std::collections::{self as coll};
 //~^ ERROR unused import: `HashMap`

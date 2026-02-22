@@ -2,6 +2,7 @@
 //@ check-pass
 
 #![warn(unused_imports)]
+#![allow(redundant_self)]
 
 pub mod nested {
     pub struct A;

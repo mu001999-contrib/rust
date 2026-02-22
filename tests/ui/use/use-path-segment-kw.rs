@@ -2,6 +2,8 @@
 //@ [e2015] edition: 2015
 //@ [e2018] edition: 2018..
 
+#![allow(redundant_self)]
+
 macro_rules! macro_dollar_crate {
     () => {
         use $crate::*;
@@ -61,8 +63,7 @@ macro_rules! macro_dollar_crate {
 
         type A10 = $crate::self; //~ ERROR `self` in paths can only be used in start position
         use $crate::self; //~ ERROR imports need to be explicitly named
-        //~^ ERROR `self` imports are only allowed within a { } list
-        pub use $crate::self as _m_self8; //~ ERROR `self` imports are only allowed within a { } list
+        pub use $crate::self as _m_self8;
         use $crate::{self}; //~ ERROR imports need to be explicitly named
         pub use $crate::{self as _m_nested_self8}; // Good
     }
@@ -176,45 +177,41 @@ mod foo {
         type D2 = ::self; //~ ERROR global paths cannot start with `self`
         use ::self; //[e2018]~ ERROR extern prelude cannot be imported
         //[e2015]~^ ERROR imports need to be explicitly named
-        //[e2015]~^^ ERROR `self` imports are only allowed within a { } list
         use ::self as _self2; //[e2018]~ ERROR extern prelude cannot be imported
-        //[e2015]~^ ERROR `self` imports are only allowed within a { } list
         use ::{self}; //[e2018]~ ERROR extern prelude cannot be imported
         //[e2015]~^ ERROR imports need to be explicitly named
         pub use ::{self as _nested_self2}; //[e2018]~ ERROR extern prelude cannot be imported
 
         type D3 = foobar::self; //~ ERROR `self` in paths can only be used in start position
-        pub use foobar::qux::self; //~ ERROR `self` imports are only allowed within a { } list
+        pub use foobar::qux::self;
         //[e2015]~^ ERROR unresolved import `foobar`
-        pub use foobar::self as _self3; //~ ERROR `self` imports are only allowed within a { } list
+        pub use foobar::self as _self3;
         //[e2015]~^ ERROR unresolved import `foobar`
         pub use foobar::baz::{self}; //[e2015]~ ERROR unresolved import `foobar`
         pub use foobar::{self as _nested_self3}; //[e2015]~ ERROR unresolved import `foobar`
 
         type D4 = crate::self; //~ ERROR `self` in paths can only be used in start position
         use crate::self; //~ ERROR imports need to be explicitly named
-        //~^ ERROR `self` imports are only allowed within a { } list
-        pub use crate::self as _self4; //~ ERROR `self` imports are only allowed within a { } list
+        pub use crate::self as _self4;
         use crate::{self}; //~ ERROR imports need to be explicitly named
         pub use crate::{self as _nested_self4}; // Good
 
         type D5 = super::self; //~ ERROR `self` in paths can only be used in start position
         use super::self; //~ ERROR imports need to be explicitly named
-        //~^ ERROR `self` imports are only allowed within a { } list
-        pub use super::self as _self5; //~ ERROR `self` imports are only allowed within a { } list
+        pub use super::self as _self5;
         use super::{self}; //~ ERROR imports need to be explicitly named
         pub use super::{self as _nested_self5};
 
         type D6 = self::self; //~ ERROR `self` in paths can only be used in start position
-        use self::self; //~ ERROR `self` imports are only allowed within a { } list
+        use self::self;
         //~^ ERROR imports need to be explicitly named
-        pub use self::self as _self6; //~ ERROR `self` imports are only allowed within a { } list
+        pub use self::self as _self6;
         use self::{self}; //~ ERROR imports need to be explicitly named
         pub use self::{self as _nested_self6};
 
         type D7 = crate::foo::bar::self; //~ ERROR `self` in paths can only be used in start position
-        use crate::foo::bar::self; //~ ERROR `self` imports are only allowed within a { } list
-        use crate::foo::bar::self as _self7; //~ ERROR `self` imports are only allowed within a { } list
+        use crate::foo::bar::self;
+        use crate::foo::bar::self as _self7;
         use crate::foo::{bar::foobar::quxbaz::self};
         use crate::foo::{bar::foobar::quxbaz::self as _nested_self7};
     }

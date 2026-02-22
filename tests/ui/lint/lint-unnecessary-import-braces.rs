@@ -1,4 +1,5 @@
 #![deny(unused_import_braces)]
+#![allow(redundant_self)]
 
 use crate::test::{A}; //~ ERROR braces around A is unnecessary
 

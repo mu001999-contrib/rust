@@ -2,6 +2,8 @@
 
 // https://github.com/rust-lang/rust/issues/125013
 
+#![allow(redundant_self)]
+
 use ops::{self as std};
 //~^ ERROR: unresolved import `ops`
 use std::ops::Deref::{self as ops};
