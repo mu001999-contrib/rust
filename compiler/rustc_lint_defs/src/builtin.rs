@@ -86,6 +86,7 @@ declare_lint_pass! {
         PUB_USE_OF_PRIVATE_EXTERN_CRATE,
         REDUNDANT_IMPORTS,
         REDUNDANT_LIFETIMES,
+        REDUNDANT_SELF,
         REFINING_IMPL_TRAIT_INTERNAL,
         REFINING_IMPL_TRAIT_REACHABLE,
         RENAMED_AND_REMOVED_LINTS,
@@ -1757,6 +1758,28 @@ declare_lint! {
     pub REDUNDANT_LIFETIMES,
     Allow,
     "detects lifetime parameters that are redundant because they are equal to some other named lifetime"
+}
+
+declare_lint! {
+    /// The `redundant_self` lint detects unnecessary `self` in `use` imports.
+    ///
+    /// ### Example
+    ///
+    /// ```rust,compile_fail
+    /// use foo::self;
+    /// use foo::self as bar;
+    /// use foo::{self};
+    /// use foo::{self as bar};
+    /// ```
+    ///
+    /// {{produces}}
+    ///
+    /// ### Explanation
+    ///
+    /// The `self` segment is redundant in these forms and can be removed.
+    pub REDUNDANT_SELF,
+    Warn,
+    "detects redundant `self` in imports",
 }
 
 declare_lint! {

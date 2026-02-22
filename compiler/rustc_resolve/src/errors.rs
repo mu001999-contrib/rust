@@ -301,40 +301,6 @@ pub(crate) struct AttemptToUseNonConstantValueInConstantWithoutSuggestion<'a> {
 }
 
 #[derive(Diagnostic)]
-#[diag("`self` imports are only allowed within a {\"{\"} {\"}\"} list", code = E0429)]
-pub(crate) struct SelfImportsOnlyAllowedWithin {
-    #[primary_span]
-    pub(crate) span: Span,
-    #[subdiagnostic]
-    pub(crate) suggestion: Option<SelfImportsOnlyAllowedWithinSuggestion>,
-    #[subdiagnostic]
-    pub(crate) mpart_suggestion: Option<SelfImportsOnlyAllowedWithinMultipartSuggestion>,
-}
-
-#[derive(Subdiagnostic)]
-#[suggestion(
-    "consider importing the module directly",
-    code = "",
-    applicability = "machine-applicable"
-)]
-pub(crate) struct SelfImportsOnlyAllowedWithinSuggestion {
-    #[primary_span]
-    pub(crate) span: Span,
-}
-
-#[derive(Subdiagnostic)]
-#[multipart_suggestion(
-    "alternatively, use the multi-path `use` syntax to import `self`",
-    applicability = "machine-applicable"
-)]
-pub(crate) struct SelfImportsOnlyAllowedWithinMultipartSuggestion {
-    #[suggestion_part(code = "{{")]
-    pub(crate) multipart_start: Span,
-    #[suggestion_part(code = "}}")]
-    pub(crate) multipart_end: Span,
-}
-
-#[derive(Diagnostic)]
 #[diag("{$shadowing_binding}s cannot shadow {$shadowed_binding}s", code = E0530)]
 pub(crate) struct BindingShadowsSomethingUnacceptable<'a> {
     #[primary_span]
@@ -968,7 +934,7 @@ pub(crate) struct UnnamedImport {
     #[primary_span]
     pub(crate) span: Span,
     #[subdiagnostic]
-    pub(crate) sugg: Option<UnnamedImportSugg>,
+    pub(crate) sugg: UnnamedImportSugg,
 }
 
 #[derive(Diagnostic)]
@@ -1564,4 +1530,23 @@ impl<'a> LintDiagnostic<'a, ()> for Ambiguity {
     fn decorate_lint<'b>(self, diag: &'b mut Diag<'a, ()>) {
         self.decorate(diag);
     }
+}
+
+#[derive(LintDiagnostic)]
+pub(crate) enum RedundantSelfDiag {
+    #[diag("unnecessary `self`")]
+    Remove {
+        #[suggestion("consider removing this", code = "", applicability = "machine-applicable")]
+        span: Span,
+    },
+    #[diag("unnecessary `self`")]
+    Replace {
+        #[suggestion(
+            "consider replacing this with",
+            code = " as {rename}",
+            applicability = "machine-applicable"
+        )]
+        span: Span,
+        rename: Ident,
+    },
 }

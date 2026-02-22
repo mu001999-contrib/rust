@@ -25,6 +25,7 @@ use rustc_metadata::creader::LoadedMacro;
 use rustc_middle::metadata::{ModChild, Reexport};
 use rustc_middle::ty::{Feed, Visibility};
 use rustc_middle::{bug, span_bug};
+use rustc_session::lint::builtin::REDUNDANT_SELF;
 use rustc_span::hygiene::{ExpnId, LocalExpnId, MacroKind};
 use rustc_span::{Ident, Span, Symbol, kw, sym};
 use thin_vec::ThinVec;
@@ -37,8 +38,8 @@ use crate::macros::{MacroRulesDecl, MacroRulesScope, MacroRulesScopeRef};
 use crate::ref_mut::CmCell;
 use crate::{
     BindingKey, Decl, DeclData, DeclKind, ExternPreludeEntry, Finalize, IdentKey, MacroData,
-    Module, ModuleKind, ModuleOrUniformRoot, ParentScope, PathResult, ResolutionError, Resolver,
-    Segment, Used, VisResolutionError, errors,
+    Module, ModuleKind, ModuleOrUniformRoot, ParentScope, PathResult, Resolver, Segment, Used,
+    VisResolutionError, errors,
 };
 
 type Res = def::Res<NodeId>;
@@ -627,27 +628,23 @@ impl<'a, 'ra, 'tcx> BuildReducedGraphVisitor<'a, 'ra, 'tcx> {
                 let mut source = module_path.pop().unwrap();
 
                 // `true` for `...::{self [as target]}` imports, `false` otherwise.
-                let type_ns_only = nested && source.ident.name == kw::SelfLower;
+                let type_ns_only = source.ident.name == kw::SelfLower;
 
                 if source.ident.name == kw::SelfLower
                     && let Some(parent) = module_path.pop()
                 {
-                    // Suggest `use prefix::{self};` for `use prefix::self;`
-                    if !type_ns_only
-                        && (parent.ident.name != kw::PathRoot
-                            || self.r.path_root_is_crate_root(parent.ident))
-                    {
-                        let span_with_rename = match rename {
-                            Some(rename) => source.ident.span.to(rename.span),
-                            None => source.ident.span,
-                        };
+                    let nested_self = nested
+                        && source.ident.name == kw::SelfLower
+                        && use_tree.prefix.segments.len() == 1;
 
-                        self.r.report_error(
-                            parent.ident.span.shrink_to_hi().to(source.ident.span),
-                            ResolutionError::SelfImportsOnlyAllowedWithin {
-                                root: parent.ident.name == kw::PathRoot,
-                                span_with_rename,
-                            },
+                    // Lint `use ...::self [as target];`
+                    if !nested_self && parent.ident.name != kw::PathRoot {
+                        let span = parent.ident.span.shrink_to_hi().to(source.ident.span);
+                        self.r.lint_buffer().buffer_lint(
+                            REDUNDANT_SELF,
+                            item.id,
+                            source.ident.span,
+                            errors::RedundantSelfDiag::Remove { span },
                         );
                     }
 
@@ -704,16 +701,10 @@ impl<'a, 'ra, 'tcx> BuildReducedGraphVisitor<'a, 'ra, 'tcx> {
                 // Deny importing path-kw without renaming
                 if rename.is_none() && ident.is_path_segment_keyword() {
                     let ident = use_tree.ident();
-
-                    // Don't suggest `use xx::self as name;` for `use xx::self;`
-                    // But it's OK to suggest `use xx::{self as name};` for `use xx::{self};`
-                    let sugg = if !type_ns_only && ident.name == kw::SelfLower {
-                        None
-                    } else {
-                        Some(errors::UnnamedImportSugg { span: ident.span, ident })
-                    };
-
-                    self.r.dcx().emit_err(errors::UnnamedImport { span: ident.span, sugg });
+                    self.r.dcx().emit_err(errors::UnnamedImport {
+                        span: ident.span,
+                        sugg: errors::UnnamedImportSugg { span: ident.span, ident },
+                    });
                     return;
                 }
 
@@ -743,7 +734,33 @@ impl<'a, 'ra, 'tcx> BuildReducedGraphVisitor<'a, 'ra, 'tcx> {
                     }
                 }
             }
-            ast::UseTreeKind::Nested { ref items, .. } => {
+            ast::UseTreeKind::Nested { ref items, span } => {
+                // Lint `use ...::{self [as target]};`
+                if let Some(parent) = prefix.last()
+                    && parent.ident.name != kw::PathRoot
+                    && let [(tree, _)] = &items[..]
+                    && let ast::UseTreeKind::Simple(rename) = tree.kind
+                    && let [segment] = &tree.prefix.segments[..]
+                    && segment.ident.name == kw::SelfLower
+                {
+                    let span = parent.ident.span.shrink_to_hi().to(span);
+                    if let Some(rename) = rename {
+                        self.r.lint_buffer().buffer_lint(
+                            REDUNDANT_SELF,
+                            item.id,
+                            segment.ident.span,
+                            errors::RedundantSelfDiag::Replace { span, rename },
+                        );
+                    } else {
+                        self.r.lint_buffer().buffer_lint(
+                            REDUNDANT_SELF,
+                            item.id,
+                            segment.ident.span,
+                            errors::RedundantSelfDiag::Remove { span },
+                        );
+                    }
+                }
+
                 for &(ref tree, id) in items {
                     self.build_reduced_graph_for_use_tree(
                         // This particular use tree
