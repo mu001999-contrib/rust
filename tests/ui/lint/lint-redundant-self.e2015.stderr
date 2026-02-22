@@ -1,0 +1,273 @@
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:9:24
+   |
+LL |         pub use crate::self;
+   |                        ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use crate::self as name;
+   |                             +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:13:25
+   |
+LL |         pub use crate::{self};
+   |                         ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use crate::{self as name};
+   |                              +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:15:25
+   |
+LL |         pub use crate::{self, x as x1};
+   |                         ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use crate::{self as name, x as x1};
+   |                              +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:20:17
+   |
+LL |         pub use self;
+   |                 ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use self as name;
+   |                      +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:22:18
+   |
+LL |         pub use {self};
+   |                  ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use {self as name};
+   |                       +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:26:24
+   |
+LL |         pub use self::{self};
+   |                        ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use self::{self as name};
+   |                             +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:28:24
+   |
+LL |         pub use self::{self, yy as yy1};
+   |                        ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use self::{self as name, yy as yy1};
+   |                             +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:33:24
+   |
+LL |         pub use super::self;
+   |                        ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use super::self as name;
+   |                             +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:37:25
+   |
+LL |         pub use super::{self};
+   |                         ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use super::{self as name};
+   |                              +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:39:25
+   |
+LL |         pub use super::{self, z as z1};
+   |                         ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use super::{self as name, z as z1};
+   |                              +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:55:19
+   |
+LL |         pub use ::self;
+   |                   ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use ::self as name;
+   |                        +++++++
+
+error: imports need to be explicitly named
+  --> $DIR/lint-redundant-self.rs:58:20
+   |
+LL |         pub use ::{self};
+   |                    ^^^^
+   |
+help: try renaming it with a name
+   |
+LL |         pub use ::{self as name};
+   |                         +++++++
+
+error[E0252]: the name `x` is defined multiple times
+  --> $DIR/lint-redundant-self.rs:48:28
+   |
+LL |         pub use crate::x::self;
+   |                 -------------- previous import of the module `x` here
+...
+LL |         pub use crate::x::{self};
+   |         -------------------^^^^--
+   |         |                  |
+   |         |                  `x` reimported here
+   |         help: remove unnecessary import
+   |
+   = note: `x` must be defined only once in the type namespace of this module
+
+error[E0252]: the name `x` is defined multiple times
+  --> $DIR/lint-redundant-self.rs:50:28
+   |
+LL |         pub use crate::x::self;
+   |                 -------------- previous import of the module `x` here
+...
+LL |         pub use crate::x::{self, z as z3};
+   |                            ^^^^--
+   |                            |
+   |                            `x` reimported here
+   |                            help: remove unnecessary import
+   |
+   = note: `x` must be defined only once in the type namespace of this module
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:9:24
+   |
+LL |         pub use crate::self;
+   |                      --^^^^
+   |                      |
+   |                      help: consider removing this
+   |
+note: the lint level is defined here
+  --> $DIR/lint-redundant-self.rs:5:9
+   |
+LL | #![deny(redundant_self)]
+   |         ^^^^^^^^^^^^^^
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:11:24
+   |
+LL |         pub use crate::self as crate1;
+   |                      --^^^^
+   |                      |
+   |                      help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:13:25
+   |
+LL |         pub use crate::{self};
+   |                      ---^^^^- help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:16:25
+   |
+LL |         pub use crate::{self as crate2};
+   |                      ---^^^^----------- help: consider replacing this with: `as crate2`
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:24:23
+   |
+LL |         pub use self::self as self3;
+   |                     --^^^^
+   |                     |
+   |                     help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:26:24
+   |
+LL |         pub use self::{self};
+   |                     ---^^^^- help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:29:24
+   |
+LL |         pub use self::{self as self4};
+   |                     ---^^^^---------- help: consider replacing this with: `as self4`
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:33:24
+   |
+LL |         pub use super::self;
+   |                      --^^^^
+   |                      |
+   |                      help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:35:24
+   |
+LL |         pub use super::self as super1;
+   |                      --^^^^
+   |                      |
+   |                      help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:37:25
+   |
+LL |         pub use super::{self};
+   |                      ---^^^^- help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:40:25
+   |
+LL |         pub use super::{self as super2};
+   |                      ---^^^^----------- help: consider replacing this with: `as super2`
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:44:27
+   |
+LL |         pub use crate::x::self;
+   |                         --^^^^
+   |                         |
+   |                         help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:46:27
+   |
+LL |         pub use crate::x::self as x3;
+   |                         --^^^^
+   |                         |
+   |                         help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:48:28
+   |
+LL |         pub use crate::x::{self};
+   |                         ---^^^^- help: consider removing this
+
+error: unnecessary `self`
+  --> $DIR/lint-redundant-self.rs:51:28
+   |
+LL |         pub use crate::x::{self as x4};
+   |                         ---^^^^------- help: consider replacing this with: `as x4`
+
+error: aborting due to 29 previous errors
+
+For more information about this error, try `rustc --explain E0252`.
