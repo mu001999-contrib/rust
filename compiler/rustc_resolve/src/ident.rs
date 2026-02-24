@@ -953,12 +953,17 @@ impl<'ra, 'tcx> Resolver<'ra, 'tcx> {
     ) -> Result<Decl<'ra>, Determinacy> {
         match module {
             ModuleOrUniformRoot::Module(module) => {
-                if ns == TypeNS
-                    && ident.name == kw::Super
-                    && let Some(module) =
-                        self.resolve_super_in_module(ident, Some(module), parent_scope)
-                {
-                    return Ok(module.self_decl.unwrap());
+                if ns == TypeNS {
+                    if ident.name == kw::SelfLower {
+                        let mut ctxt = ident.span.ctxt().normalize_to_macros_2_0();
+                        let module = self.resolve_self(&mut ctxt, module);
+                        return Ok(module.self_decl.unwrap());
+                    }
+                    if ident.name == kw::Super
+                        && let Some(module) =
+                            self.resolve_super_in_module(ident, Some(module), parent_scope) {
+                        return Ok(module.self_decl.unwrap());
+                    }
                 }
 
                 let (ident_key, def) = IdentKey::new_adjusted(ident, module.expansion);
@@ -1018,7 +1023,7 @@ impl<'ra, 'tcx> Resolver<'ra, 'tcx> {
                     {
                         let module = self.resolve_crate_root(ident);
                         return Ok(module.self_decl.unwrap());
-                    } else if ident.name == kw::Super || ident.name == kw::SelfLower {
+                    } else if ident.name == kw::Super {
                         // FIXME: Implement these with renaming requirements so that e.g.
                         // `use super;` doesn't work, but `use super as name;` does.
                         // Fall through here to get an error from `early_resolve_...`.

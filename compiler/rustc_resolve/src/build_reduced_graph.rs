@@ -549,12 +549,12 @@ impl<'a, 'ra, 'tcx> BuildReducedGraphVisitor<'a, 'ra, 'tcx> {
 
         self.r.indeterminate_imports.push(import);
         match import.kind {
-            ImportKind::Single { target, type_ns_only, .. } => {
+            ImportKind::Single { target, .. } => {
                 // Don't add underscore imports to `single_imports`
                 // because they cannot define any usable names.
                 if target.name != kw::Underscore {
                     self.r.per_ns(|this, ns| {
-                        if !type_ns_only || ns == TypeNS {
+                        if ns == TypeNS {
                             let key = BindingKey::new(IdentKey::new(target), ns);
                             this.resolution_or_default(current_module, key, target.span)
                                 .borrow_mut(this)
@@ -623,80 +623,18 @@ impl<'a, 'ra, 'tcx> BuildReducedGraphVisitor<'a, 'ra, 'tcx> {
 
         match use_tree.kind {
             ast::UseTreeKind::Simple(rename) => {
-                let mut ident = use_tree.ident();
                 let mut module_path = prefix;
-                let mut source = module_path.pop().unwrap();
+                let source = module_path.pop().unwrap();
 
-                // `true` for `...::{self [as target]}` imports, `false` otherwise.
-                let type_ns_only = source.ident.name == kw::SelfLower;
-
-                if source.ident.name == kw::SelfLower
-                    && let Some(parent) = module_path.pop()
+                let ident = if source.ident.name == kw::SelfLower
+                    && rename.is_none()
+                    && let Some(parent) = module_path.last()
                 {
-                    let nested_self = nested
-                        && source.ident.name == kw::SelfLower
-                        && use_tree.prefix.segments.len() == 1;
-
-                    // Lint `use ...::self [as target];`
-                    if !nested_self && parent.ident.name != kw::PathRoot {
-                        let span = parent.ident.span.shrink_to_hi().to(source.ident.span);
-                        self.r.lint_buffer().buffer_lint(
-                            REDUNDANT_SELF,
-                            item.id,
-                            source.ident.span,
-                            errors::RedundantSelfDiag::Remove { span },
-                        );
-                    }
-
                     let self_span = source.ident.span;
-                    source = parent;
-                    if rename.is_none() {
-                        ident = Ident::new(source.ident.name, self_span);
-                    }
-                }
-
-                match source.ident.name {
-                    kw::DollarCrate => {
-                        if !module_path.is_empty() {
-                            self.r.dcx().span_err(
-                                source.ident.span,
-                                "`$crate` in paths can only be used in start position",
-                            );
-                            return;
-                        }
-                    }
-                    kw::Crate => {
-                        if !module_path.is_empty() {
-                            self.r.dcx().span_err(
-                                source.ident.span,
-                                "`crate` in paths can only be used in start position",
-                            );
-                            return;
-                        }
-                    }
-                    kw::Super => {
-                        // Allow `self::super` as a valid prefix - `self` at position 0
-                        // followed by any number of `super` segments.
-                        let valid_prefix = module_path.iter().enumerate().all(|(i, seg)| {
-                            let name = seg.ident.name;
-                            name == kw::Super || (name == kw::SelfLower && i == 0)
-                        });
-
-                        if !valid_prefix {
-                            self.r.dcx().span_err(
-                                source.ident.span,
-                                "`super` in paths can only be used in start position, after `self`, or after another `super`",
-                            );
-                            return;
-                        }
-                    }
-                    // Deny `use ::{self};` after edition 2015
-                    kw::PathRoot if !self.r.path_root_is_crate_root(source.ident) => {
-                        self.r.dcx().span_err(use_tree.span, "extern prelude cannot be imported");
-                        return;
-                    }
-                    _ => {}
-                }
+                    Ident::new(parent.ident.name, self_span)
+                } else {
+                    use_tree.ident()
+                };
 
                 // Deny importing path-kw without renaming
                 if rename.is_none() && ident.is_path_segment_keyword() {
@@ -712,7 +650,6 @@ impl<'a, 'ra, 'tcx> BuildReducedGraphVisitor<'a, 'ra, 'tcx> {
                     source: source.ident,
                     target: ident,
                     decls: Default::default(),
-                    type_ns_only,
                     nested,
                     id,
                 };
@@ -735,32 +672,6 @@ impl<'a, 'ra, 'tcx> BuildReducedGraphVisitor<'a, 'ra, 'tcx> {
                 }
             }
             ast::UseTreeKind::Nested { ref items, span } => {
-                // Lint `use ...::{self [as target]};`
-                if let Some(parent) = prefix.last()
-                    && parent.ident.name != kw::PathRoot
-                    && let [(tree, _)] = &items[..]
-                    && let ast::UseTreeKind::Simple(rename) = tree.kind
-                    && let [segment] = &tree.prefix.segments[..]
-                    && segment.ident.name == kw::SelfLower
-                {
-                    let span = parent.ident.span.shrink_to_hi().to(span);
-                    if let Some(rename) = rename {
-                        self.r.lint_buffer().buffer_lint(
-                            REDUNDANT_SELF,
-                            item.id,
-                            segment.ident.span,
-                            errors::RedundantSelfDiag::Replace { span, rename },
-                        );
-                    } else {
-                        self.r.lint_buffer().buffer_lint(
-                            REDUNDANT_SELF,
-                            item.id,
-                            segment.ident.span,
-                            errors::RedundantSelfDiag::Remove { span },
-                        );
-                    }
-                }
-
                 for &(ref tree, id) in items {
                     self.build_reduced_graph_for_use_tree(
                         // This particular use tree
