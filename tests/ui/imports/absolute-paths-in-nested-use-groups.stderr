@@ -10,12 +10,13 @@ error[E0433]: `super` in paths can only be used in start position
 LL |     super::bar,
    |     ^^^^^ can only be used in path start position
 
-error[E0433]: `self` in paths can only be used in start position
+error[E0432]: unresolved import `foo::self::bar`
   --> $DIR/absolute-paths-in-nested-use-groups.rs:10:5
    |
 LL |     self::bar,
-   |     ^^^^ can only be used in path start position
+   |     ^^^^^^^^^ no `bar` in `foo`
 
 error: aborting due to 3 previous errors
 
-For more information about this error, try `rustc --explain E0433`.
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
