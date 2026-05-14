@@ -850,7 +850,7 @@ declare_lint! {
     ///
     /// Otherwise, consider removing it if the struct is no longer in use.
     pub UNCONSTRUCTABLE_PUB_STRUCT,
-    Allow,
+    Deny,
     "detects pub structs that are unconstructable externally and never constructed locally"
 }
 
