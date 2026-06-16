@@ -16,11 +16,23 @@ error: struct `AnotherPrivateType` is never constructed
 LL |     struct AnotherPrivateType;
    |            ^^^^^^^^^^^^^^^^^^
 
+error: struct `PrivateType` is never constructed
+  --> $DIR/allow-trait-or-impl.rs:19:12
+   |
+LL |     struct PrivateType;
+   |            ^^^^^^^^^^^
+
+error: struct `AnotherPrivateType` is never constructed
+  --> $DIR/allow-trait-or-impl.rs:22:12
+   |
+LL |     struct AnotherPrivateType;
+   |            ^^^^^^^^^^^^^^^^^^
+
 error: struct `AnotherPrivateType` is never constructed
   --> $DIR/allow-trait-or-impl.rs:34:12
    |
 LL |     struct AnotherPrivateType;
    |            ^^^^^^^^^^^^^^^^^^
 
-error: aborting due to 3 previous errors
+error: aborting due to 5 previous errors
 

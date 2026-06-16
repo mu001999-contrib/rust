@@ -548,6 +548,7 @@ impl<'tcx> MarkSymbolVisitor<'tcx> {
     fn check_impl_or_impl_item_live(
         &self,
         local_def_id: LocalDefId,
+        defer_seeds: bool,
     ) -> Option<ComesFromAllowExpect> {
         let (impl_block_id, trait_def_id) = match self.tcx.def_kind(local_def_id) {
             // assoc impl items of traits are live if the corresponding trait items are live
@@ -563,10 +564,14 @@ impl<'tcx> MarkSymbolVisitor<'tcx> {
             _ => bug!(),
         };
 
-        if let Some(trait_def_id) = trait_def_id
-            && !self.live_symbols.contains(&trait_def_id)
-        {
-            return has_allow_dead_code_or_lang_attr(self.tcx, trait_def_id);
+        if let Some(trait_def_id) = trait_def_id {
+            if !defer_seeds && let comes_from_allow @ Some(_) = has_allow_dead_code_or_lang_attr(self.tcx, trait_def_id) {
+                return comes_from_allow;
+            }
+
+            if !self.live_symbols.contains(&trait_def_id) {
+                return None;
+            }
         }
 
         // The impl or impl item is used if the corresponding trait or trait item is used and the ty is used.
@@ -575,7 +580,11 @@ impl<'tcx> MarkSymbolVisitor<'tcx> {
             && let Some(adt_def_id) = adt.did().as_local()
             && !self.live_symbols.contains(&adt_def_id)
         {
-            return has_allow_dead_code_or_lang_attr(self.tcx, adt_def_id);
+            if defer_seeds {
+                return None;
+            } else {
+                return has_allow_dead_code_or_lang_attr(self.tcx, adt_def_id);
+            }
         }
 
         Some(ComesFromAllowExpect::No)
@@ -583,29 +592,34 @@ impl<'tcx> MarkSymbolVisitor<'tcx> {
 
     fn collect_live_items_from_unsolved_items(
         &mut self,
+        defer_seeds: bool,
     ) -> Vec<(LocalDefId, ComesFromAllowExpect)> {
         let mut unsolved_items = std::mem::take(&mut self.unsolved_items);
         let mut items_to_check = vec![];
         unsolved_items.retain(|&def_id| {
-            if let Some(comes_from_allow) = self.check_impl_or_impl_item_live(def_id) {
-                items_to_check.push((def_id, comes_from_allow));
-                false
-            } else {
-                true
-            }
+            let Some(comes_from_allow) = self.check_impl_or_impl_item_live(def_id, defer_seeds)
+            else {
+                return true;
+            };
+
+            items_to_check.push((def_id, comes_from_allow));
+            false
         });
         self.unsolved_items = unsolved_items;
         items_to_check
     }
 
-    fn mark_live_symbols_and_ignored_derived_traits(&mut self) -> Result<(), ErrorGuaranteed> {
+    fn mark_live_symbols_and_ignored_derived_traits(
+        &mut self,
+        defer_seeds: bool,
+    ) -> Result<(), ErrorGuaranteed> {
         if let ControlFlow::Break(guar) = self.mark_live_symbols() {
             return Err(guar);
         }
 
         // We have marked the primary seeds as live. We now need to process unsolved items from traits
         // and trait impls: add them to the work list if the trait or the implemented type is live.
-        let mut items_to_check = self.collect_live_items_from_unsolved_items();
+        let mut items_to_check = self.collect_live_items_from_unsolved_items(defer_seeds);
 
         while !items_to_check.is_empty() {
             self.worklist.extend(items_to_check.into_iter().map(|(id, comes_from_allow)| {
@@ -615,7 +629,7 @@ impl<'tcx> MarkSymbolVisitor<'tcx> {
                 return Err(guar);
             }
 
-            items_to_check = self.collect_live_items_from_unsolved_items();
+            items_to_check = self.collect_live_items_from_unsolved_items(defer_seeds);
         }
 
         Ok(())
@@ -1031,14 +1045,14 @@ fn live_symbols_and_ignored_derived_traits(
         propagated_comes_from_allow_expect: ComesFromAllowExpect::No,
         unsolved_items,
     };
-    symbol_visitor.mark_live_symbols_and_ignored_derived_traits()?;
+    symbol_visitor.mark_live_symbols_and_ignored_derived_traits(true)?;
     let pre_deferred_seeding = DeadCodeLivenessSnapshot {
         live_symbols: symbol_visitor.live_symbols.clone(),
         ignored_derived_traits: symbol_visitor.ignored_derived_traits.clone(),
     };
 
     symbol_visitor.worklist.extend(deferred_seeds);
-    symbol_visitor.mark_live_symbols_and_ignored_derived_traits()?;
+    symbol_visitor.mark_live_symbols_and_ignored_derived_traits(false)?;
 
     Ok(DeadCodeLivenessSummary {
         pre_deferred_seeding,
