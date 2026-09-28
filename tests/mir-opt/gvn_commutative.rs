@@ -1,4 +1,4 @@
-//@ test-mir-pass: GVN,+LowerIntrinsics
+//@ test-mir-pass: GVN,+LowerIntrinsics,+InstSimplify-after-simplifycfg
 //@ compile-flags: -C overflow-checks=off
 
 #![feature(core_intrinsics)]
